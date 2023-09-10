@@ -1,0 +1,405 @@
+import { NibroCore } from "./NibroCore";
+
+export namespace CardUtils {
+  export interface CardUtilsInterface {
+    SortDeck: (ctx: NibroCore.Context, args: NibroCore.Arguments) => void;
+    DealCard: (ctx?: NibroCore.Context, args?: NibroCore.Arguments) => void;
+    DiscardCard: (ctx?: NibroCore.Context, args?: NibroCore.Arguments) => void;
+    PruneCards: (playerId: string, deck: string, cards: string[]) => void;
+    GetCardIdByName: (deckName: string, cardName: string) => string;
+    SafetyCard: (
+      ctx: NibroCore.Context,
+      args: {
+        cardid?: string;
+      },
+    ) => void;
+    CreateDealCardMacros: () => void;
+  }
+
+  export class CardUtilsImplementation implements CardUtilsInterface {
+    constructor() {
+      NibroCore.NibroCore.registerChatCommand({
+        primaryName: "SortDeck",
+        run: this.SortDeck,
+        args: {
+          deck: { required: true },
+        },
+        aliases: [],
+        helpText: "Sorts the selected deck alphabetically",
+      });
+      NibroCore.NibroCore.registerChatCommand({
+        primaryName: "DealCard",
+        run: this.DealCard,
+        args: {
+          cardid: { required: false },
+          deckname: { required: false },
+          cardname: { required: false },
+          playername: { required: false },
+          playerid: { required: false },
+        },
+        aliases: [],
+        helpText:
+          "Deals the selected card from the selected deck to the selected player",
+      });
+      NibroCore.NibroCore.registerChatCommand({
+        primaryName: "SafetyCard",
+        run: this.SafetyCard,
+        args: {
+          cardid: { required: true },
+        },
+        aliases: [],
+        helpText:
+          "Deals the selected safety card to all players and announces that a card has been played",
+        auth: () => true,
+      });
+      NibroCore.NibroCore.registerChatCommand({
+        primaryName: "DiscardCard",
+        run: this.DiscardCard,
+        args: {
+          playername: { required: false },
+          playerid: { required: false },
+        },
+        aliases: [],
+        helpText: "Removes a card from a players hand",
+      });
+      NibroCore.NibroCore.registerMacro({
+        name: "DiscardCard",
+        action: () => `!DiscardCard`,
+        isVisibleToAll: false,
+        isTokenAction: false,
+      });
+      NibroCore.NibroCore.registerMacro({
+        name: "SortDeck",
+        action: () => {
+          const decks = findObjs({ _type: "deck" })
+            .map((deck: Deck) => deck.get("name"))
+            .sort()
+            .join("|");
+          return `!SortDeck --deck ?{Deck|${decks}}`;
+        },
+        isTokenAction: false,
+        isVisibleToAll: false,
+      });
+      NibroCore.NibroCore.registerSetupHook(() => {
+        this.CreateDealCardMacros();
+      });
+    }
+
+    public SortDeck(ctx: NibroCore.Context, args: { deck?: string }) {
+      if (!args.deck) {
+        NibroCore.NibroCore.whisperReply(ctx, "Argument 'deck' required");
+        return;
+      }
+      let deck: Deck;
+      deck = findObjs(
+        {
+          _type: "deck",
+          name: args.deck,
+        },
+        { caseInsensitive: true },
+      )?.[0];
+      if (!deck) {
+        NibroCore.NibroCore.whisperReply(ctx, "Deck not found");
+        return;
+      }
+      const cards: Card[] = (deck.get("_currentDeck") as string)
+        .split(",")
+        .filter((id) => id !== "")
+        .map((id) => {
+          return getObj("card", id);
+        })
+        .sort((a, b) => {
+          return a
+            .get("name")
+            ?.toUpperCase()
+            ?.localeCompare(b.get("name")?.toLocaleUpperCase());
+        });
+      shuffleDeck(
+        deck.get("_id"),
+        true,
+        cards.map((card) => card.get("_id")),
+      );
+      NibroCore.NibroCore.whisperReply(ctx, "Deck sorted");
+    }
+
+    public DealCard(
+      ctx?: NibroCore.Context,
+      args?: {
+        cardid?: string;
+        deckname?: string;
+        cardname?: string;
+        playername?: string;
+        playerid?: string;
+      },
+    ) {
+      if (!args) {
+        return;
+      }
+      if (!(args.cardid || (args.deckname && args.cardname))) {
+        if (ctx)
+          NibroCore.NibroCore.whisperReply(
+            ctx,
+            "Argument 'cardId' or 'deckName' and 'cardName' required",
+          );
+        return;
+      }
+
+      let cardId: string | undefined = args?.cardid;
+      const deckName: string | undefined = args?.deckname;
+      const cardName: string | undefined = args?.cardname;
+      let playerId: string =
+        (args.playerid ? args.playerid : ctx?.msg?.playerid) || "";
+
+      // Get playerId by name
+      if (args.playername) {
+        const player = findObjs(
+          {
+            _type: "player",
+            _displayname: args.playername,
+          },
+          { caseInsensitive: true },
+        )?.[0] as Player;
+        if (player) {
+          playerId = player.get("_id");
+        }
+      }
+
+      // Set cardId based on cardName and deckName
+      if (!cardId && deckName && cardName) {
+        cardId = CardUtils.GetCardIdByName(deckName, cardName);
+        if (!cardId) {
+          if (ctx) NibroCore.NibroCore.whisperReply(ctx, "Card not found");
+          return;
+        }
+      }
+
+      // Check if card already held
+      for (const hand of findObjs({ _type: "hand", _parentid: playerId })) {
+        let cards: string = hand.get("currentHand");
+        if (cards.split(",").find((card) => card === cardId)) {
+          if (ctx) NibroCore.NibroCore.whisperReply(ctx, "Card already held");
+          return;
+        }
+      }
+
+      if (!cardId) {
+        if (ctx) NibroCore.NibroCore.whisperReply(ctx, "Card not found");
+        return;
+      }
+
+      giveCardToPlayer(cardId, playerId);
+      if (ctx) NibroCore.NibroCore.whisperReply(ctx, "Card granted");
+    }
+
+    public SafetyCard(
+      ctx: NibroCore.Context,
+      args: {
+        cardid?: string;
+      },
+    ) {
+      findObjs({ _type: "player" }).forEach((player: Player) => {
+        CardUtils.DealCard(ctx, {
+          cardid: args.cardid ?? "",
+          playerid: player.id,
+        });
+      });
+      sendChat(
+        "NibroCore",
+        `A safety card has been played anonymously`,
+        undefined,
+        {
+          noarchive: true,
+        },
+      );
+    }
+
+    public CreateDealCardMacros() {
+      findObjs(
+        {
+          _type: "deck",
+        },
+        { caseInsensitive: true },
+      ).forEach((deck: Deck) => {
+        let cards: Card[];
+        cards = (
+          findObjs({
+            _type: "card",
+            _deckid: deck.id,
+          }) as Card[]
+        ).sort((a, b) => {
+          return a
+            .get("name")
+            ?.toUpperCase()
+            ?.localeCompare(b.get("name")?.toLocaleUpperCase());
+        });
+        const cardMacro: string = `?{Card|${cards
+          .map((card) => `${card.get("name")},${card.id}`)
+          .join("|")}}`;
+        if (deck.get("name") == "Safety Deck") {
+          NibroCore.NibroCore.registerMacro({
+            name: "SafetyCard",
+            action: () => `!SafetyCard --cardid ${cardMacro}`,
+            isVisibleToAll: true,
+            isTokenAction: false,
+          });
+          return;
+        }
+        const macroName = `Deal_${deck.get("name").replace(" ", "-")}`;
+        NibroCore.NibroCore.registerMacro({
+          name: macroName,
+          action: () =>
+            `!DealCard --playerid ${CardUtilsImplementation.getPlayerListMacro()} --cardid ${cardMacro}`,
+          isVisibleToAll: false,
+          isTokenAction: false,
+        });
+      });
+    }
+
+    public DiscardCard(
+      ctx?: NibroCore.Context,
+      args?: {
+        playerid?: string;
+        cardid?: string;
+      },
+    ) {
+      if (args?.cardid) {
+        let playerId: string =
+          (args?.playerid ? args.playerid : ctx?.msg?.playerid) || "";
+        const success = takeCardFromPlayer(playerId, { cardid: args.cardid });
+        if (success) {
+          if (ctx) NibroCore.NibroCore.whisperReply(ctx, "Card discarded");
+        } else {
+          if (ctx)
+            NibroCore.NibroCore.whisperReply(
+              ctx,
+              "Card was unable to be discarded",
+            );
+        }
+        return;
+      }
+      if (ctx)
+        NibroCore.NibroCore.whisperReply(
+          ctx,
+          `&{template:default} {{name=Discard Cards}} ${findObjs({
+            _type: "player",
+          })
+            .map((player: Player): string => {
+              const playerId = player.get("_id");
+              const playerName = player.get("_displayname");
+              const discardCardButtons = findObjs({
+                _type: "hand",
+                _parentid: playerId,
+              })
+                .map((hand: Hand): string => {
+                  const cards: Card[] = (hand.get("currentHand") as string)
+                    .split(",")
+                    .filter((id) => id !== "")
+                    .map((id) => {
+                      return getObj("card", id);
+                    })
+                    .sort((a, b) => {
+                      return a
+                        .get("name")
+                        ?.toUpperCase()
+                        ?.localeCompare(b.get("name")?.toLocaleUpperCase());
+                    });
+                  return cards
+                    .map((card) => {
+                      return `[Discard: ${card.get(
+                        "name",
+                      )}](!DiscardCard --playerid ${playerId} --cardid ${
+                        card.id
+                      })`;
+                    })
+                    .join(" ");
+                })
+                .join(" ");
+              NibroCore.NibroCore.whisperReply(ctx, discardCardButtons);
+              return `{{${playerName}=${discardCardButtons}}}`;
+            })
+            .filter((str) => !str.endsWith("=}}"))
+            .join(" ")}`,
+        );
+    }
+
+    private static getPlayerListMacro(): string {
+      let players: Player[];
+      players = findObjs({
+        _type: "player",
+      });
+      if (players.length === 1) {
+        return players[0].id;
+      }
+      return `?{Player|${players
+        .map((player) => `${player.get("_displayname")},${player.id}`)
+        .join("|")}}`;
+    }
+
+    public PruneCards(playerId: string, deckName: string, cardNames: string[]) {
+      //Get Deck ID
+      const deck: Deck = findObjs(
+        {
+          _type: "deck",
+          name: deckName,
+        },
+        { caseInsensitive: true },
+      )?.[0];
+      if (!deck) {
+        log("Nibrocore - Deck not found: " + deckName);
+        return;
+      }
+
+      for (const hand of findObjs({ _type: "hand", _parentid: playerId })) {
+        let cards: Card[] = hand
+          .get("currentHand")
+          .split(",")
+          .map((cardId: string): Card => getObj("card", cardId))
+          .filter((card: Card) => !!card && card.get("_deckid") === deck.id);
+        for (const card of cards) {
+          if (!cardNames.includes(card.get("name"))) {
+            CardUtils.DiscardCard(undefined, {
+              playerid: playerId,
+              cardid: card.id,
+            });
+          }
+        }
+        for (const cardName of cardNames) {
+          CardUtils.DealCard(undefined, {
+            playerid: playerId,
+            deckname: deckName,
+            cardname: cardName,
+          });
+        }
+      }
+    }
+
+    public GetCardIdByName(deckName: string, cardName: string): string {
+      const deck: Deck = findObjs(
+        {
+          _type: "deck",
+          name: deckName,
+        },
+        { caseInsensitive: true },
+      )?.[0];
+      if (!deck) {
+        log("Nibrocore - error finding deck: " + deckName);
+        return "";
+      }
+      const card: Card = findObjs(
+        {
+          _type: "card",
+          name: cardName,
+          _deckid: deck.id,
+        },
+        { caseInsensitive: true },
+      )?.[0];
+      if (!card) {
+        log("Nibrocore - error finding card: " + cardName);
+        return "";
+      }
+      return card.id;
+    }
+  }
+
+  export let CardUtils: CardUtilsInterface = new CardUtilsImplementation();
+}
