@@ -2,7 +2,7 @@
   "name": "roll20-nibrosuite",
   "type": "module",
   "scripts": {
-    "start": "bun run --watch ./index.ts"
+    "start": "bun build --watch NibroSuite.ts --outdir build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.6.0",
