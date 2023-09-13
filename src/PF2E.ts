@@ -3,6 +3,7 @@ import NibroTokenUtils from "./TokenUtils";
 
 namespace NibroPF2E {
   export function getSelectedCharacters(ctx: NibroCore.Context): Character[] {
+    if (!ctx) return [];
     return ctx.msg.selected
       ?.map((graphic) => {
         if (graphic._type != "graphic") {
@@ -206,7 +207,7 @@ namespace NibroPF2E {
                                 )
                                 .join()}
                           `.replace(/\s{2,}/g, " "),
-            `player|${ctx.msg.playerid}`,
+            `player|${ctx?.msg.playerid}`,
           );
           break;
         }
@@ -231,7 +232,7 @@ namespace NibroPF2E {
                                 )
                                 .join()}
                           `.replace(/\s{2,}/g, " "),
-            `player|${ctx.msg.playerid}`,
+            `player|${ctx?.msg.playerid}`,
           );
           break;
         }
@@ -256,7 +257,7 @@ namespace NibroPF2E {
                                 )
                                 .join()}
                               `.replace(/\s{2,}/g, " "),
-            `player|${ctx.msg.playerid}`,
+            `player|${ctx?.msg.playerid}`,
           );
           break;
         }
@@ -281,7 +282,7 @@ namespace NibroPF2E {
                                 )
                                 .join()}
                           `.replace(/\s{2,}/g, " "),
-            `player|${ctx.msg.playerid}`,
+            `player|${ctx?.msg.playerid}`,
           );
           break;
         }
@@ -358,7 +359,7 @@ namespace NibroPF2E {
                         )
                         .join()}
                   `.replace(/\s{2,}/g, " "),
-        `player|${ctx.msg.playerid}`,
+        `player|${ctx?.msg.playerid}`,
       );
     },
   });

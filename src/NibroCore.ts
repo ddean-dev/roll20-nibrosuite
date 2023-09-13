@@ -23,11 +23,13 @@ namespace NibroCore {
     advancedArgs?: string[];
   }
 
-  export interface Context {
+  interface context {
     msg: Message;
     command: ChatCommand;
     args: Arguments;
   }
+
+  export type Context = context | undefined;
 
   export interface Arguments {
     [key: string]: string;
@@ -121,7 +123,7 @@ namespace NibroCore {
     sendChat("NibroCore", `/w gm ${text}`, undefined, { noarchive: true });
   }
 
-  export function whisperReply(ctx: Context, text: string) {
+  export function whisperReply(ctx: Context, text?: string) {
     if (!ctx) {
       log("NibroCore Whisper Reply: " + text);
       return;
@@ -190,6 +192,9 @@ namespace NibroCore {
   }
 
   function _setup(ctx: Context, _: Arguments) {
+    if (!ctx) {
+      return;
+    }
     setupCallbacks.forEach((callback) => callback());
     const GMList = findObjs({ _type: "player" })
       .filter((player: Player) => playerIsGM(player.id))
@@ -219,7 +224,7 @@ namespace NibroCore {
         });
       }
     });
-    whisperGM("Macros Updated");
+    whisperGM(`Macros Updated`);
   }
 
   function _advanced_macro(
@@ -233,7 +238,7 @@ namespace NibroCore {
   }
 
   function _advanced_macro_auth(ctx: Context): boolean {
-    return advancedMacros[ctx.args.macro]?.isVisibleToAll || isGM(ctx);
+    return advancedMacros[ctx?.args.macro || ""]?.isVisibleToAll || isGM(ctx);
   }
 
   registerChatCommand({

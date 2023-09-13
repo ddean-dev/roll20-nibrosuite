@@ -4,6 +4,9 @@ namespace NibroMapUtils {
   export const PUBLIC_MAP_PREFIX: string = "*";
 
   export function ChangeMap(ctx: NibroCore.Context, args: { mapid?: string }) {
+    if (!ctx) {
+      return;
+    }
     let playerPages = Campaign().get("playerspecificpages") as
       | { [playerId: string]: string }
       | false;

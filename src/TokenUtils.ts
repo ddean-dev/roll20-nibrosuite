@@ -19,6 +19,7 @@ namespace NibroTokenUtils {
       };
     },
   ): string[] {
+    if (!ctx) return [];
     let names: string[] = [];
     ctx.msg.selected?.forEach((selection) => {
       if (selection._type != "graphic") {

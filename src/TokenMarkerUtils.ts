@@ -8,6 +8,8 @@ namespace NibroTokenMarkerUtils {
     ctx: NibroCore.Context,
     args: { marker?: string; value?: string },
   ) {
+    if (!ctx) return;
+
     //Validate arguments
     if (args.marker == undefined) {
       NibroCore.whisperReply(ctx, "Argument 'marker' required");

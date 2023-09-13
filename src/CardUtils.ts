@@ -2,8 +2,8 @@ import NibroCore from "./NibroCore";
 
 namespace NibroCardUtils {
   export function DealCard(
-    ctx?: NibroCore.Context,
-    args?: {
+    ctx: NibroCore.Context,
+    args: {
       cardid?: string;
       deckname?: string;
       cardname?: string;
@@ -23,9 +23,9 @@ namespace NibroCardUtils {
       return;
     }
 
-    let cardId: string | undefined = args?.cardid;
-    const deckName: string | undefined = args?.deckname;
-    const cardName: string | undefined = args?.cardname;
+    let cardId: string | undefined = args.cardid;
+    const deckName: string | undefined = args.deckname;
+    const cardName: string | undefined = args.cardname;
     let playerId: string =
       (args.playerid ? args.playerid : ctx?.msg?.playerid) || "";
 
@@ -135,8 +135,8 @@ namespace NibroCardUtils {
   }
 
   export function DiscardCard(
-    ctx?: NibroCore.Context,
-    args?: {
+    ctx: NibroCore.Context,
+    args: {
       playerid?: string;
       cardid?: string;
     },
