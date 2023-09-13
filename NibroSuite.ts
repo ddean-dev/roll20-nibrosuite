@@ -1,5 +1,4 @@
-//@ts-ignore
-import { getGitCommitHash, getBuildTime, getVersion } from './src/lib/macros' with { type: 'macro' };
+import { getBuildTime, getVersion } from './src/lib/macros' with { type: 'macro' };
 
 import NibroCardUtils from "./src/CardUtils";
 import NibroCore from "./src/NibroCore";
@@ -16,8 +15,7 @@ NibroTokenMarkerUtils;
 NibroPF2E;
 
 namespace NibroSuite {
-    export const version = getVersion()
-    export const commit = getGitCommitHash()
-    export const buildTime = getBuildTime()
-    log(`NibroSuite Version: ${version}(${buildTime})`)
+  export const version = getVersion()
+  export const buildTime = getBuildTime()
+  log(`NibroSuite Version: ${version}(${buildTime})`)
 }
