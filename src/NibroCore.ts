@@ -89,13 +89,14 @@ namespace NibroCore {
     return playerIsGM(ctx.msg.playerid);
   }
 
-  export function registerChatCommand(command: ChatCommand) {
+  export function registerChatCommand(command: ChatCommand): ChatCommand {
     chatCommands[command.primaryName.toUpperCase()] = command;
     chatCommandsArray.push(command);
     command.aliases?.forEach((alias) => {
       chatCommands[alias.toUpperCase()] = command;
     });
     log(`Registered NibroCore Command: !${command.primaryName}`);
+    return command;
   }
 
   export function registerMacro(macro: ManagedMacro) {
@@ -170,6 +171,12 @@ namespace NibroCore {
     setupCallbacks.push(callback);
   }
 
+  export function getGMPlayerIds(): string[] {
+    return findObjs({ _type: "player" })
+      .filter((player: Player) => playerIsGM(player.id))
+      .map((player) => player.id);
+  }
+
   function _help(ctx: Context, _: Arguments) {
     let output = "";
     output = output + "NibroCore has the following commands registered:";
@@ -196,10 +203,7 @@ namespace NibroCore {
       return;
     }
     setupCallbacks.forEach((callback) => callback());
-    const GMList = findObjs({ _type: "player" })
-      .filter((player: Player) => playerIsGM(player.id))
-      .map((player) => player.id)
-      .join(",");
+    const GMList = getGMPlayerIds().join(",");
     const existingMacros: Macro[] = findObjs({
       _type: "macro",
     });
@@ -241,17 +245,19 @@ namespace NibroCore {
     return advancedMacros[ctx?.args.macro || ""]?.isVisibleToAll || isGM(ctx);
   }
 
-  registerChatCommand({
+  export const CommandNibroHelp = registerChatCommand({
     primaryName: "NibroHelp",
     helpText: "Provides a list of available NibroCore functions",
     run: (ctx: Context, args: Arguments) => _help(ctx, args),
   });
-  registerChatCommand({
+
+  export const CommandNibroSetup = registerChatCommand({
     primaryName: "NibroSetup",
     helpText: "Initializes NibroCore, creating macros for all managed macros",
     run: (ctx: Context, args: Arguments) => _setup(ctx, args),
   });
-  registerChatCommand({
+
+  export const CommandNibroMacro = registerChatCommand({
     primaryName: "NibroMacro",
     run: (ctx: Context, args: Arguments) => _advanced_macro(ctx, args),
     auth: (ctx: Context) => _advanced_macro_auth(ctx),
@@ -265,6 +271,7 @@ namespace NibroCore {
       },
     },
   });
+
   on("chat:message", (msg) => onChatMessage(msg));
 }
 export default NibroCore;

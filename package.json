@@ -1,6 +1,6 @@
 {
   "name": "roll20-nibrosuite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "start": "bun build --watch NibroSuite.ts --outdir build"

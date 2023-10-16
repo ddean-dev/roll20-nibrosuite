@@ -102,17 +102,20 @@ namespace NibroTokenMarkerUtils {
         .join(" "),
     );
     obj.set("show_tooltip", true);
-    obj
+    let playerIds: string[] = obj
       .get("controlledby")
       .split(",")
-      .filter((x: string) => x !== "all")
-      .forEach((playerId: string) => {
-        NibroCardUtils.PruneCards(
-          playerId,
-          "Conditions",
-          currentMarkers.map((tm) => tokenMarkerName(tm)),
-        );
-      });
+      .filter((x: string) => x !== "all" && x !== "");
+    if (playerIds.length == 0) {
+      playerIds = NibroCore.getGMPlayerIds();
+    }
+    playerIds.forEach((playerId: string) => {
+      NibroCardUtils.PruneCards(
+        playerId,
+        "Conditions",
+        currentMarkers.map((tm) => tokenMarkerName(tm)),
+      );
+    });
   }
 
   export function toTitleCase(str: string): string {
@@ -139,6 +142,7 @@ namespace NibroTokenMarkerUtils {
     auth: () => true,
     helpText: "Sets a token marker on the selected tokens",
   });
+
   NibroCore.registerMacro({
     name: "Condition",
     action: () => {
@@ -158,6 +162,7 @@ namespace NibroTokenMarkerUtils {
     isVisibleToAll: true,
     isTokenAction: true,
   });
+
   on("change:graphic:statusmarkers", SetTokenMarkerTooltip);
 }
 export default NibroTokenMarkerUtils;
