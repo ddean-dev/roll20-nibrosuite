@@ -1,9 +1,9 @@
 {
   "name": "roll20-nibrosuite",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
-    "start": "bun build --watch NibroSuite.ts --outdir build"
+    "start": "bun build NibroSuite.ts --outdir build && cat ./build/NibroSuite.js | clip.exe"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.6.0",

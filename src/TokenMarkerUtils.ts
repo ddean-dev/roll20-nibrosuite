@@ -1,9 +1,7 @@
-import NibroCardUtils from "./CardUtils";
 import NibroCore from "./NibroCore";
+import NibroPF2E from "./PF2E";
 
 namespace NibroTokenMarkerUtils {
-  export const TOKEN_MARKER_PREFIX = "condition-";
-
   export function SetTokenMarker(
     ctx: NibroCore.Context,
     args: { marker?: string; value?: string },
@@ -16,7 +14,6 @@ namespace NibroTokenMarkerUtils {
       return;
     }
     let tag: string = args.marker;
-    let asdf = "";
     let val: number = parseInt(args.value || "");
     if (!isNaN(val) && (val > 9 || val < -1)) {
       NibroCore.whisperReply(ctx, "Argument 'value' must be between -1 and 9");
@@ -67,68 +64,15 @@ namespace NibroTokenMarkerUtils {
           currentMarkers[markerIndex] = tag;
         }
         obj.set("statusmarkers", currentMarkers.join(","));
-        SetTokenMarkerTooltip(obj);
         count += 1;
+        NibroPF2E.setConditionsTooltip(obj);
+        NibroPF2E.dealConditionCards(obj);
       });
     if (count >= 1) {
       NibroCore.whisperReply(ctx, `Marker set on ${count} token(s)`);
     } else {
       NibroCore.whisperReply(ctx, "No selected tokens found");
     }
-  }
-
-  export function SetTokenMarkerTooltip(obj: Graphic) {
-    let tooltip: string = obj.get("tooltip");
-    if (tooltip && !tooltip.startsWith("[")) {
-      return;
-    }
-    let currentMarkers: string[] = (obj.get("statusmarkers") as string).split(
-      ",",
-    );
-    currentMarkers = currentMarkers.filter((tm) => {
-      return !!tm && tm.startsWith(TOKEN_MARKER_PREFIX);
-    });
-    obj.set(
-      "tooltip",
-      currentMarkers
-        .map((tm) => {
-          let tag = `[${tokenMarkerName(tm)}]`;
-          const split = tm.indexOf("@");
-          if (split !== -1) {
-            tag = `[${tokenMarkerName(tm)} ${tm.slice(split + 1)}]`;
-          }
-          return tag;
-        })
-        .join(" "),
-    );
-    obj.set("show_tooltip", true);
-    let playerIds: string[] = obj
-      .get("controlledby")
-      .split(",")
-      .filter((x: string) => x !== "all" && x !== "");
-    if (playerIds.length == 0) {
-      playerIds = NibroCore.getGMPlayerIds();
-    }
-    playerIds.forEach((playerId: string) => {
-      NibroCardUtils.PruneCards(
-        playerId,
-        "Conditions",
-        currentMarkers.map((tm) => tokenMarkerName(tm)),
-      );
-    });
-  }
-
-  export function toTitleCase(str: string): string {
-    return str.replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
-    );
-  }
-
-  export function tokenMarkerName(tm: string): string {
-    const tag: string = tm.split(":")[0];
-    const name: string = tag.slice(TOKEN_MARKER_PREFIX.length);
-    return toTitleCase(name.replace("-", " "));
   }
 
   NibroCore.registerChatCommand({
@@ -142,27 +86,6 @@ namespace NibroTokenMarkerUtils {
     auth: () => true,
     helpText: "Sets a token marker on the selected tokens",
   });
-
-  NibroCore.registerMacro({
-    name: "Condition",
-    action: () => {
-      const markers: TokenMarker[] = JSON.parse(
-        Campaign().get("token_markers"),
-      );
-      const markerChoices: string = markers
-        .filter((marker) => marker.name.startsWith(TOKEN_MARKER_PREFIX))
-        .map((marker) => {
-          const name = tokenMarkerName(marker.tag);
-          return `${name},${marker.tag}`;
-        })
-        .sort()
-        .join("|");
-      return `!SetTokenMarker --marker ?{Marker|${markerChoices}} --value ?{Value| , |Clear,-1|1|2|3|4|5|6|7|8|9|0}`;
-    },
-    isVisibleToAll: true,
-    isTokenAction: true,
-  });
-
-  on("change:graphic:statusmarkers", SetTokenMarkerTooltip);
 }
+
 export default NibroTokenMarkerUtils;

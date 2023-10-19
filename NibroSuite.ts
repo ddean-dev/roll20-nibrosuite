@@ -5,7 +5,7 @@ import NibroPF2E from "./src/PF2E";
 import NibroTokenMarkerUtils from "./src/TokenMarkerUtils";
 import NibroTokenUtils from "./src/TokenUtils";
 
-export namespace NibroSuite {
+namespace NibroSuite {
   NibroCore;
   NibroMapUtils;
   NibroCardUtils;

@@ -1,8 +1,11 @@
 import NibroCore from "./NibroCore";
+import NibroCardUtils from "./CardUtils";
 import NibroTokenUtils from "./TokenUtils";
 
 namespace NibroPF2E {
-  export function getSelectedCharacters(ctx: NibroCore.Context): Character[] {
+  const TOKEN_MARKER_CONDITION_PREFIX = "condition-";
+
+  function getSelectedCharacters(ctx: NibroCore.Context): Character[] {
     if (!ctx) return [];
     return ctx.msg.selected
       ?.map((graphic) => {
@@ -18,12 +21,77 @@ namespace NibroPF2E {
       .filter((x) => !!x) as Character[];
   }
 
+  function getConditionMarkers(obj: Graphic): string[] {
+    return (obj.get("statusmarkers") as string).split(",").filter((tm) => {
+      return !!tm && tm.startsWith(TOKEN_MARKER_CONDITION_PREFIX);
+    });
+  }
+
+  export function setConditionsTooltip(obj: Graphic): string[] {
+    let tooltip: string = obj.get("tooltip");
+    if (tooltip && !tooltip.startsWith("[")) {
+      return [];
+    }
+    let currentMarkers = getConditionMarkers(obj);
+    obj.set(
+      "tooltip",
+      currentMarkers
+        .map((tm) => {
+          let tag = `[${tokenMarkerName(tm)}]`;
+          const split = tm.indexOf("@");
+          if (split !== -1) {
+            tag = `[${tokenMarkerName(tm)} ${tm.slice(split + 1)}]`;
+          }
+          return tag;
+        })
+        .join(" "),
+    );
+    obj.set("show_tooltip", true);
+
+    return currentMarkers;
+  }
+
+  export function dealConditionCards(obj: Graphic): void {
+    let currentMarkers = getConditionMarkers(obj);
+    let character_id = obj.get("represents");
+    let controlledBy: string = character_id
+      ? (getObj("character", character_id) as Character).get("controlledby")
+      : obj.get("controlledby");
+    let playerIds: string[] = controlledBy
+      .split(",")
+      .filter((x: string) => x !== "all" && x !== "");
+    if (playerIds.length == 0) {
+      playerIds = NibroCore.getGMPlayerIds();
+    }
+    playerIds.forEach((playerId: string) => {
+      NibroCardUtils.PruneCards(
+        playerId,
+        "Conditions",
+        currentMarkers.map((tm: string) => tokenMarkerName(tm)),
+      );
+    });
+  }
+
+  function toTitleCase(str: string): string {
+    return str.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
+    );
+  }
+
+  function tokenMarkerName(tm: string): string {
+    const tag: string = tm.split(":")[0];
+    const name: string = tag.slice(TOKEN_MARKER_CONDITION_PREFIX.length);
+    return toTitleCase(name.replace("-", " "));
+  }
+
   NibroCore.registerMacro({
     name: "Initiative",
     isTokenAction: true,
     isVisibleToAll: true,
     action: () => "%{selected|initiative}",
   });
+
   NibroCore.registerMacro({
     name: "LongRest",
     isTokenAction: true,
@@ -55,6 +123,7 @@ namespace NibroPF2E {
       );
     },
   });
+
   NibroCore.registerMacro({
     name: "PersistentDamage",
     isTokenAction: false,
@@ -62,6 +131,7 @@ namespace NibroPF2E {
     action: () =>
       "&{template:rolls} {{header=Persistent Damage}} {{roll01=[[?{Damage|1d6}]]}} {{roll01_type=damage}} {{notes_show=[[floor(1d20/15)]]}} {{notes=Persistent damage ends}}",
   });
+
   NibroCore.registerMacro({
     name: "PCSetup",
     isTokenAction: false,
@@ -111,6 +181,7 @@ namespace NibroPF2E {
       NibroCore.whisperReply(ctx, "PC Token Configured: " + names.join(", "));
     },
   });
+
   NibroCore.registerMacro({
     name: "NPCSetup",
     isTokenAction: false,
@@ -157,6 +228,7 @@ namespace NibroPF2E {
       NibroCore.whisperReply(ctx, "NPC Tokens Configured: " + names.join(", "));
     },
   });
+
   NibroCore.registerMacro({
     name: "ToggleTorch",
     isTokenAction: true,
@@ -179,6 +251,7 @@ namespace NibroPF2E {
       });
     },
   });
+
   NibroCore.registerMacro({
     name: "Saves",
     isTokenAction: true,
@@ -328,6 +401,7 @@ namespace NibroPF2E {
       }
     },
   });
+
   NibroCore.registerMacro({
     name: "Skills",
     isTokenAction: true,
@@ -363,6 +437,7 @@ namespace NibroPF2E {
       );
     },
   });
+
   NibroCore.registerMacro({
     name: "QuickRoll",
     action: () => {
@@ -370,6 +445,33 @@ namespace NibroPF2E {
     },
     isVisibleToAll: false,
     isTokenAction: true,
+  });
+
+  NibroCore.registerMacro({
+    name: "Condition",
+    action: () => {
+      const markers: TokenMarker[] = JSON.parse(
+        Campaign().get("token_markers"),
+      );
+      const markerChoices: string = markers
+        .filter((marker) =>
+          marker.name.startsWith(TOKEN_MARKER_CONDITION_PREFIX),
+        )
+        .map((marker) => {
+          const name = tokenMarkerName(marker.tag);
+          return `${name},${marker.tag}`;
+        })
+        .sort()
+        .join("|");
+      return `!SetTokenMarker --marker ?{Marker|${markerChoices}} --value ?{Value| , |Clear,-1|1|2|3|4|5|6|7|8|9|0}`;
+    },
+    isVisibleToAll: true,
+    isTokenAction: true,
+  });
+
+  on("change:graphic:statusmarkers", (obj: Graphic) => {
+    setConditionsTooltip(obj);
+    dealConditionCards(obj);
   });
 }
 export default NibroPF2E;
