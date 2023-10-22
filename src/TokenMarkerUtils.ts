@@ -14,7 +14,7 @@ namespace NibroTokenMarkerUtils {
       return;
     }
     let tag: string = args.marker;
-    let val: number = parseInt(args.value || "");
+    const val: number = parseInt(args.value || "");
     if (!isNaN(val) && (val > 9 || val < -1)) {
       NibroCore.whisperReply(ctx, "Argument 'value' must be between -1 and 9");
       return;

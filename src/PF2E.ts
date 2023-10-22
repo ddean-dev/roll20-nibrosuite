@@ -360,7 +360,7 @@ namespace NibroPF2E {
     },
   };
 
-  function getSelectedCharacters(ctx: NibroCore.Context): Character[] {
+  export function getSelectedCharacters(ctx: NibroCore.Context): Character[] {
     if (!ctx) return [];
     return ctx.msg.selected
       ?.map((graphic) => {
@@ -376,18 +376,18 @@ namespace NibroPF2E {
       .filter((x) => !!x) as Character[];
   }
 
-  function getConditionMarkers(obj: Graphic): string[] {
+  export function getConditionMarkers(obj: Graphic): string[] {
     return (obj.get("statusmarkers") as string).split(",").filter((tm) => {
       return !!tm && tm.startsWith(TOKEN_MARKER_CONDITION_PREFIX);
     });
   }
 
   export function setConditionsTooltip(obj: Graphic): string[] {
-    let tooltip: string = obj.get("tooltip");
+    const tooltip: string = obj.get("tooltip");
     if (tooltip && !tooltip.startsWith("[")) {
       return [];
     }
-    let currentMarkers = getConditionMarkers(obj);
+    const currentMarkers = getConditionMarkers(obj);
     obj.set(
       "tooltip",
       currentMarkers
@@ -407,9 +407,9 @@ namespace NibroPF2E {
   }
 
   export function dealConditionCards(obj: Graphic): void {
-    let currentMarkers = getConditionMarkers(obj);
-    let character_id = obj.get("represents");
-    let controlledBy: string = character_id
+    const currentMarkers = getConditionMarkers(obj);
+    const character_id = obj.get("represents");
+    const controlledBy: string = character_id
       ? (getObj("character", character_id) as Character).get("controlledby")
       : obj.get("controlledby");
     let playerIds: string[] = controlledBy
@@ -427,10 +427,10 @@ namespace NibroPF2E {
     });
   }
 
-  function macro_longRest(ctx: NibroCore.Context) {
+  export function macro_longRest(ctx: NibroCore.Context) {
     const names = NibroTokenUtils.setSelected(ctx, {
       bar1_value: {
-        mod: (_, __, character_id, ___) => {
+        mod: (_, __, character_id) => {
           const current_hp = parseInt(
             getAttrByName(character_id, "hit_points"),
           );
@@ -454,14 +454,14 @@ namespace NibroPF2E {
     );
   }
 
-  function toTitleCase(str: string): string {
+  export function toTitleCase(str: string): string {
     return str.replace(
       /\w\S*/g,
       (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
     );
   }
 
-  function tokenMarkerName(tm: string): string {
+  export function tokenMarkerName(tm: string): string {
     const tag: string = tm.split(":")[0];
     const name: string = tag.slice(TOKEN_MARKER_CONDITION_PREFIX.length);
     return toTitleCase(name.replace("-", " "));

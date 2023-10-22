@@ -45,7 +45,7 @@ namespace NibroMapUtils {
     if (playerPages !== false) {
       for (const playerId in playerPages) {
         if (
-          playerPages.hasOwnProperty(playerId) &&
+          Object.hasOwn(playerPages, playerId) &&
           pageIds.indexOf(playerPages[playerId]) === -1
         ) {
           delete playerPages[playerId];

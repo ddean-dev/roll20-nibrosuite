@@ -54,7 +54,7 @@ namespace NibroCardUtils {
 
     // Check if card already held
     for (const hand of findObjs({ _type: "hand", _parentid: playerId })) {
-      let cards: string = hand.get("currentHand");
+      const cards: string = hand.get("currentHand");
       if (cards.split(",").find((card) => card === cardId)) {
         if (ctx) NibroCore.whisperReply(ctx, "Card already held");
         return;
@@ -99,8 +99,7 @@ namespace NibroCardUtils {
       },
       { caseInsensitive: true },
     ).forEach((deck: Deck) => {
-      let cards: Card[];
-      cards = (
+      const cards: Card[] = (
         findObjs({
           _type: "card",
           _deckid: deck.id,
@@ -142,7 +141,7 @@ namespace NibroCardUtils {
     },
   ) {
     if (args?.cardid) {
-      let playerId: string =
+      const playerId: string =
         (args?.playerid ? args.playerid : ctx?.msg?.playerid) || "";
       const success = takeCardFromPlayer(playerId, { cardid: args.cardid });
       if (success) {
@@ -198,8 +197,7 @@ namespace NibroCardUtils {
   }
 
   export function getPlayerListMacro(): string {
-    let players: Player[];
-    players = findObjs({
+    const players: Player[] = findObjs({
       _type: "player",
     });
     if (players.length === 1) {
@@ -242,8 +240,7 @@ namespace NibroCardUtils {
       NibroCore.whisperReply(ctx, "Argument 'deck' required");
       return;
     }
-    let deck: Deck;
-    deck = findObjs(
+    const deck: Deck = findObjs(
       {
         _type: "deck",
         name: args.deck,
@@ -293,7 +290,7 @@ namespace NibroCardUtils {
     }
 
     for (const hand of findObjs({ _type: "hand", _parentid: playerId })) {
-      let cards: Card[] = hand
+      const cards: Card[] = hand
         .get("currentHand")
         .split(",")
         .map((cardId: string): Card => getObj("card", cardId))

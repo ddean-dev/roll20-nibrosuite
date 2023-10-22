@@ -1,9 +1,9 @@
 namespace NibroCore {
-  export let chatCommands: { [key: string]: ChatCommand } = {};
-  export let chatCommandsArray: ChatCommand[] = [];
-  export let managedMacros: ManagedMacro[] = [];
-  export let advancedMacros: { [id: string]: ManagedMacro } = {};
-  export let setupCallbacks: (() => void)[] = [];
+  export const chatCommands: { [key: string]: ChatCommand } = {};
+  export const chatCommandsArray: ChatCommand[] = [];
+  export const managedMacros: ManagedMacro[] = [];
+  export const advancedMacros: { [id: string]: ManagedMacro } = {};
+  export const setupCallbacks: (() => void)[] = [];
 
   export interface ChatCommand {
     primaryName: string;
@@ -47,7 +47,7 @@ namespace NibroCore {
       // Lookup command
       const commandName = msg.content.split(" ")[0].slice(1).toUpperCase();
       let command: ChatCommand;
-      if (chatCommands.hasOwnProperty(commandName)) {
+      if (Object.hasOwn(chatCommands, commandName)) {
         command = chatCommands[commandName];
       } else {
         return;
@@ -111,7 +111,7 @@ namespace NibroCore {
         macro.action = () => `!NibroMacro --macro ${macro.name}`;
       }
     }
-    let i = managedMacros.findIndex((m) => m.name == macro.name);
+    const i = managedMacros.findIndex((m) => m.name == macro.name);
     if (i == -1) {
       managedMacros.push(macro);
     } else {
@@ -139,7 +139,7 @@ namespace NibroCore {
   }
 
   export function getAttributeId(character_id: string, name: string): string {
-    let results = findObjs({
+    const results = findObjs({
       _type: "attribute",
       _characterid: character_id,
       name: name,
@@ -177,7 +177,7 @@ namespace NibroCore {
       .map((player) => player.id);
   }
 
-  function _help(ctx: Context, _: Arguments) {
+  export function _help(ctx: Context) {
     let output = "";
     output = output + "NibroCore has the following commands registered:";
     chatCommandsArray.forEach((com) => {
@@ -198,7 +198,7 @@ namespace NibroCore {
     direct(output);
   }
 
-  function _setup(ctx: Context, _: Arguments) {
+  export function _setup(ctx: Context) {
     if (!ctx) {
       return;
     }
@@ -231,7 +231,7 @@ namespace NibroCore {
     whisperGM(`Macros Updated`);
   }
 
-  function _advanced_macro(
+  export function _advanced_macro(
     ctx: Context,
     args: { args?: string; macro?: string },
   ) {
@@ -241,20 +241,20 @@ namespace NibroCore {
     );
   }
 
-  function _advanced_macro_auth(ctx: Context): boolean {
+  export function _advanced_macro_auth(ctx: Context): boolean {
     return advancedMacros[ctx?.args.macro || ""]?.isVisibleToAll || isGM(ctx);
   }
 
   export const CommandNibroHelp = registerChatCommand({
     primaryName: "NibroHelp",
     helpText: "Provides a list of available NibroCore functions",
-    run: (ctx: Context, args: Arguments) => _help(ctx, args),
+    run: (ctx: Context) => _help(ctx),
   });
 
   export const CommandNibroSetup = registerChatCommand({
     primaryName: "NibroSetup",
     helpText: "Initializes NibroCore, creating macros for all managed macros",
-    run: (ctx: Context, args: Arguments) => _setup(ctx, args),
+    run: (ctx: Context) => _setup(ctx),
   });
 
   export const CommandNibroMacro = registerChatCommand({
