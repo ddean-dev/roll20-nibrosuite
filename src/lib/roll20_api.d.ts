@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare type Roll20TypeName =
   | CreatableRoll20TypeName
   | "player"
@@ -6,6 +5,8 @@ declare type Roll20TypeName =
   | "deck"
   | "card"
   | "hand";
+
+declare type Roll20Object = Player | Page | Deck | Card | Hand;
 
 declare type CreatableRoll20TypeName =
   | "graphic"
@@ -28,12 +29,12 @@ declare function findObjs(
   attributes: {
     _type?: Roll20TypeName;
     _id?: string;
-    [key: string]: any;
+    [key: string]: Roll20Object;
   },
   options?: {
     caseInsensitive: boolean;
   },
-): any[];
+): Roll20Object[];
 
 declare function getObj(type: "deck", id: string): Deck;
 
@@ -55,7 +56,10 @@ declare function giveCardToPlayer(cardId: string, playerId: string);
 
 declare function log(text: string);
 
-declare function on(event: string, callback: (obj: any, prev: any) => void);
+declare function on(
+  event: string,
+  callback: (obj: Roll20Object, prev: Roll20Object) => void,
+);
 
 declare function playerIsGM(playerId: string): boolean;
 
@@ -90,7 +94,7 @@ declare function getAttrByName(
   character_id,
   attribute_name,
   value_type?: "current" | "max",
-): any | undefined;
+): boolean | number | string | undefined;
 
 declare interface Message {
   who: string;
@@ -137,7 +141,7 @@ declare interface Deck {
       | "defaultwidth"
       | "discardpilemode"
       | "_discardPile",
-  ) => any;
+  ) => boolean | number | string;
   set: (
     property:
       | "name"
@@ -154,22 +158,22 @@ declare interface Deck {
       | "defaultheight"
       | "defaultwidth"
       | "discardpilemode",
-    value: any,
+    value: boolean | number | string,
   ) => void;
 }
 
 declare interface Card {
   id: string;
-  get: (property: "name" | "avatar" | "_deckid" | "_type" | "_id") => any;
-  set: (property: "name" | "avatar", value: any) => void;
+  get: (property: "name" | "avatar" | "_deckid" | "_type" | "_id") => string;
+  set: (property: "name" | "avatar", value: string) => void;
 }
 
 declare interface Hand {
   id: string;
   get: (
     property: "currentHand" | "currentView" | "_parentid" | "_type" | "_id",
-  ) => any;
-  set: (property: "currentHand" | "currentView", value: any) => void;
+  ) => string;
+  set: (property: "currentHand" | "currentView", value: string) => void;
 }
 
 declare interface Player {
@@ -186,8 +190,11 @@ declare interface Player {
       | "speakingas"
       | "color"
       | "showmacrobar",
-  ) => any;
-  set: (property: "speakingas" | "color" | "showmacrobar", value: any) => void;
+  ) => boolean | string;
+  set: (
+    property: "speakingas" | "color" | "showmacrobar",
+    value: string,
+  ) => void;
 }
 
 declare interface Campaign {
@@ -203,7 +210,7 @@ declare interface Campaign {
       | "playerspecificpages"
       | "_journalfolder"
       | "_jukeboxfolder",
-  ) => any;
+  ) => boolean | string;
   set: (
     property:
       | "token_markers"
@@ -211,7 +218,7 @@ declare interface Campaign {
       | "initiativepage"
       | "playerpageid"
       | "playerspecificpages",
-    value: any,
+    value: boolean | string,
   ) => void;
 }
 
@@ -303,8 +310,11 @@ declare interface Graphic {
       | "_cardid"
       | "_pageid"
       | GraphicSettableProperty,
-  ) => any;
-  set: (property: GraphicSettableProperty, value: any) => void;
+  ) => boolean | number | string;
+  set: (
+    property: GraphicSettableProperty,
+    value: boolean | number | string,
+  ) => void;
 }
 
 declare interface Selected {
@@ -340,7 +350,7 @@ declare interface Page {
       | "lightenforcelos"
       | "lightrestrictmove"
       | "lightglobalillum",
-  ) => any;
+  ) => boolean | number | string;
   set: (
     property:
       | "name"
@@ -364,7 +374,7 @@ declare interface Page {
       | "lightenforcelos"
       | "lightrestrictmove"
       | "lightglobalillum",
-    value: any,
+    value: boolean | number | string,
   ) => void;
 }
 
@@ -379,10 +389,10 @@ declare interface Macro {
       | "action"
       | "visibleto"
       | "istokenaction",
-  ) => any;
+  ) => boolean | string;
   set: (
     property: "name" | "action" | "visibleto" | "istokenaction",
-    value: any,
+    value: boolean | string,
   ) => void;
 }
 
@@ -400,8 +410,11 @@ declare interface Player {
       | "speakingas"
       | "color"
       | "showmacrobar",
-  ) => any;
-  set: (property: "speakingas" | "color" | "showmacrobar", value: any) => void;
+  ) => boolean | number | string;
+  set: (
+    property: "speakingas" | "color" | "showmacrobar",
+    value: boolean | string,
+  ) => void;
 }
 
 declare interface Character {
@@ -418,7 +431,7 @@ declare interface Character {
       | "inplayerjournals"
       | "controlledby"
       | "_defaulttoken",
-  ) => any;
+  ) => boolean | number | string;
   set: (
     property:
       | "avatar"
@@ -428,7 +441,7 @@ declare interface Character {
       | "archived"
       | "inplayerjournals"
       | "controlledby",
-    value: any,
+    value: boolean | string,
   ) => void;
 }
 
@@ -436,7 +449,7 @@ declare interface Attribute {
   id: string;
   get: (
     property: "_id" | "_type" | "_characterid" | "name" | "current" | "max",
-  ) => any;
+  ) => boolean | number | string;
   set: (property: "name" | "current" | "max") => void;
 }
 
@@ -451,6 +464,6 @@ declare interface Ability {
       | "description"
       | "action"
       | "istokenaction",
-  ) => any;
+  ) => boolean | number | string;
   set: (property: "name" | "description" | "action" | "istokenaction") => void;
 }
