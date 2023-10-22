@@ -1,4 +1,5 @@
 import NibroCore from "./NibroCore";
+import NibroUtils from "./NibroUtils";
 import NibroPF2E from "./PF2E";
 
 namespace NibroTokenMarkerUtils {
@@ -10,13 +11,16 @@ namespace NibroTokenMarkerUtils {
 
     //Validate arguments
     if (args.marker == undefined) {
-      NibroCore.whisperReply(ctx, "Argument 'marker' required");
+      NibroUtils.Chat.whisperReply(ctx, "Argument 'marker' required");
       return;
     }
     let tag: string = args.marker;
     const val: number = parseInt(args.value || "");
     if (!isNaN(val) && (val > 9 || val < -1)) {
-      NibroCore.whisperReply(ctx, "Argument 'value' must be between -1 and 9");
+      NibroUtils.Chat.whisperReply(
+        ctx,
+        "Argument 'value' must be between -1 and 9",
+      );
       return;
     }
 
@@ -28,7 +32,7 @@ namespace NibroTokenMarkerUtils {
       (tm) => tm.tag === args.marker,
     );
     if (!marker) {
-      NibroCore.whisperReply(ctx, "Marker not found");
+      NibroUtils.Chat.whisperReply(ctx, "Marker not found");
       return;
     }
 
@@ -69,9 +73,9 @@ namespace NibroTokenMarkerUtils {
         NibroPF2E.dealConditionCards(obj);
       });
     if (count >= 1) {
-      NibroCore.whisperReply(ctx, `Marker set on ${count} token(s)`);
+      NibroUtils.Chat.whisperReply(ctx, `Marker set on ${count} token(s)`);
     } else {
-      NibroCore.whisperReply(ctx, "No selected tokens found");
+      NibroUtils.Chat.whisperReply(ctx, "No selected tokens found");
     }
   }
 

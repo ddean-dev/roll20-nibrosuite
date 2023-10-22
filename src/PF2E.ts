@@ -1,5 +1,6 @@
 import NibroCardUtils from "./CardUtils";
 import NibroCore from "./NibroCore";
+import NibroUtils from "./NibroUtils";
 import NibroTokenUtils from "./TokenUtils";
 
 namespace NibroPF2E {
@@ -71,7 +72,10 @@ namespace NibroPF2E {
           emits_low_light: { value: false },
           low_light_distance: { value: 40 },
         });
-        NibroCore.whisperReply(ctx, "PC Token Configured: " + names.join(", "));
+        NibroUtils.Chat.whisperReply(
+          ctx,
+          "PC Token Configured: " + names.join(", "),
+        );
       },
     },
     NPCSetup: {
@@ -117,7 +121,7 @@ namespace NibroPF2E {
           emits_low_light: { value: false },
           low_light_distance: { value: 40 },
         });
-        NibroCore.whisperReply(
+        NibroUtils.Chat.whisperReply(
           ctx,
           "NPC Tokens Configured: " + names.join(", "),
         );
@@ -154,7 +158,7 @@ namespace NibroPF2E {
         const characters = getSelectedCharacters(ctx);
         switch (args[0]) {
           case "Perception": {
-            NibroCore.reply(
+            NibroUtils.Chat.reply(
               ctx,
               `
                               &{template:rolls}
@@ -178,7 +182,7 @@ namespace NibroPF2E {
             break;
           }
           case "Fortitude": {
-            NibroCore.reply(
+            NibroUtils.Chat.reply(
               ctx,
               `
                               &{template:rolls}
@@ -203,7 +207,7 @@ namespace NibroPF2E {
             break;
           }
           case "Reflex": {
-            NibroCore.reply(
+            NibroUtils.Chat.reply(
               ctx,
               `
                               &{template:rolls}
@@ -228,7 +232,7 @@ namespace NibroPF2E {
             break;
           }
           case "Will": {
-            NibroCore.reply(
+            NibroUtils.Chat.reply(
               ctx,
               `
                               &{template:rolls}
@@ -253,7 +257,7 @@ namespace NibroPF2E {
             break;
           }
           default: {
-            NibroCore.whisperReply(
+            NibroUtils.Chat.whisperReply(
               ctx,
               characters
                 .map((char) =>
@@ -303,7 +307,7 @@ namespace NibroPF2E {
       ],
       advancedAction: (ctx, args) => {
         const characters = getSelectedCharacters(ctx);
-        NibroCore.reply(
+        NibroUtils.Chat.reply(
           ctx,
           `
                       &{template:rolls}
@@ -416,7 +420,7 @@ namespace NibroPF2E {
       .split(",")
       .filter((x: string) => x !== "all" && x !== "");
     if (playerIds.length == 0) {
-      playerIds = NibroCore.getGMPlayerIds();
+      playerIds = NibroUtils.getGMPlayerIds();
     }
     playerIds.forEach((playerId: string) => {
       NibroCardUtils.PruneCards(
@@ -448,7 +452,7 @@ namespace NibroPF2E {
         },
       },
     });
-    NibroCore.whisperReply(
+    NibroUtils.Chat.whisperReply(
       ctx,
       "Long rest healing applied to: " + names.join(", "),
     );

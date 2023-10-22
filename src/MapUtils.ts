@@ -1,4 +1,5 @@
 import NibroCore from "./NibroCore";
+import NibroUtils from "./NibroUtils";
 
 namespace NibroMapUtils {
   export const PUBLIC_MAP_PREFIX: string = "*";
@@ -14,9 +15,9 @@ namespace NibroMapUtils {
       if (playerPages !== false && ctx.msg.playerid in playerPages) {
         delete playerPages[ctx.msg.playerid];
         setPlayerSpecificPages(playerPages);
-        NibroCore.whisperReply(ctx, "Rejoined active map");
+        NibroUtils.Chat.whisperReply(ctx, "Rejoined active map");
       } else {
-        NibroCore.whisperReply(ctx, "You are already on the active map");
+        NibroUtils.Chat.whisperReply(ctx, "You are already on the active map");
       }
     } else {
       if (playerPages === false) {
@@ -29,9 +30,12 @@ namespace NibroMapUtils {
         }
         playerPages[ctx.msg.playerid] = args.mapid;
         setPlayerSpecificPages(playerPages);
-        NibroCore.whisperReply(ctx, "Changed map");
+        NibroUtils.Chat.whisperReply(ctx, "Changed map");
       } else {
-        NibroCore.whisperReply(ctx, "You are already on the selected map");
+        NibroUtils.Chat.whisperReply(
+          ctx,
+          "You are already on the selected map",
+        );
       }
     }
   }

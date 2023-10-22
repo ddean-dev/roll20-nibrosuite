@@ -1,4 +1,5 @@
 import NibroCore from "./NibroCore";
+import NibroUtils from "./NibroUtils";
 
 namespace NibroCardUtils {
   export function DealCard(
@@ -16,7 +17,7 @@ namespace NibroCardUtils {
     }
     if (!(args.cardid || (args.deckname && args.cardname))) {
       if (ctx)
-        NibroCore.whisperReply(
+        NibroUtils.Chat.whisperReply(
           ctx,
           "Argument 'cardId' or 'deckName' and 'cardName' required",
         );
@@ -47,7 +48,7 @@ namespace NibroCardUtils {
     if (!cardId && deckName && cardName) {
       cardId = GetCardIdByName(deckName, cardName);
       if (!cardId) {
-        if (ctx) NibroCore.whisperReply(ctx, "Card not found");
+        if (ctx) NibroUtils.Chat.whisperReply(ctx, "Card not found");
         return;
       }
     }
@@ -56,18 +57,18 @@ namespace NibroCardUtils {
     for (const hand of findObjs({ _type: "hand", _parentid: playerId })) {
       const cards: string = hand.get("currentHand");
       if (cards.split(",").find((card) => card === cardId)) {
-        if (ctx) NibroCore.whisperReply(ctx, "Card already held");
+        if (ctx) NibroUtils.Chat.whisperReply(ctx, "Card already held");
         return;
       }
     }
 
     if (!cardId) {
-      if (ctx) NibroCore.whisperReply(ctx, "Card not found");
+      if (ctx) NibroUtils.Chat.whisperReply(ctx, "Card not found");
       return;
     }
 
     giveCardToPlayer(cardId, playerId);
-    if (ctx) NibroCore.whisperReply(ctx, "Card granted");
+    if (ctx) NibroUtils.Chat.whisperReply(ctx, "Card granted");
   }
 
   export function SafetyCard(
@@ -145,14 +146,15 @@ namespace NibroCardUtils {
         (args?.playerid ? args.playerid : ctx?.msg?.playerid) || "";
       const success = takeCardFromPlayer(playerId, { cardid: args.cardid });
       if (success) {
-        if (ctx) NibroCore.whisperReply(ctx, "Card discarded");
+        if (ctx) NibroUtils.Chat.whisperReply(ctx, "Card discarded");
       } else {
-        if (ctx) NibroCore.whisperReply(ctx, "Card was unable to be discarded");
+        if (ctx)
+          NibroUtils.Chat.whisperReply(ctx, "Card was unable to be discarded");
       }
       return;
     }
     if (ctx)
-      NibroCore.whisperReply(
+      NibroUtils.Chat.whisperReply(
         ctx,
         `&{template:default} {{name=Discard Cards}} ${findObjs({
           _type: "player",
@@ -188,7 +190,7 @@ namespace NibroCardUtils {
                   .join(" ");
               })
               .join(" ");
-            NibroCore.whisperReply(ctx, discardCardButtons);
+            NibroUtils.Chat.whisperReply(ctx, discardCardButtons);
             return `{{${playerName}=${discardCardButtons}}}`;
           })
           .filter((str) => !str.endsWith("=}}"))
@@ -237,7 +239,7 @@ namespace NibroCardUtils {
 
   export function SortDeck(ctx: NibroCore.Context, args: { deck?: string }) {
     if (!args.deck) {
-      NibroCore.whisperReply(ctx, "Argument 'deck' required");
+      NibroUtils.Chat.whisperReply(ctx, "Argument 'deck' required");
       return;
     }
     const deck: Deck = findObjs(
@@ -248,7 +250,7 @@ namespace NibroCardUtils {
       { caseInsensitive: true },
     )?.[0];
     if (!deck) {
-      NibroCore.whisperReply(ctx, "Deck not found");
+      NibroUtils.Chat.whisperReply(ctx, "Deck not found");
       return;
     }
     const cards: Card[] = (deck.get("_currentDeck") as string)
@@ -268,7 +270,7 @@ namespace NibroCardUtils {
       true,
       cards.map((card) => card.get("_id")),
     );
-    NibroCore.whisperReply(ctx, "Deck sorted");
+    NibroUtils.Chat.whisperReply(ctx, "Deck sorted");
   }
 
   export function PruneCards(

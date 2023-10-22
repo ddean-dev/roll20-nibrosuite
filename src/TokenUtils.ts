@@ -1,4 +1,5 @@
 import NibroCore from "./NibroCore";
+import NibroUtils from "./NibroUtils";
 
 namespace NibroTokenUtils {
   export function setSelected(
@@ -53,7 +54,7 @@ namespace NibroTokenUtils {
         } else if (val.link) {
           token.set(
             property as GraphicSettableProperty,
-            NibroCore.getAttributeId(character_id, val.link),
+            NibroUtils.getAttributeId(character_id, val.link),
           );
         }
       });
