@@ -8,11 +8,9 @@ namespace NibroMapUtils {
     if (!ctx) {
       return;
     }
-    let playerPages = Campaign().get("playerspecificpages") as
-      | { [playerId: string]: string }
-      | false;
+    let playerPages = Campaign().get("playerspecificpages");
     if (!args.mapid || args.mapid === "rejoin") {
-      if (playerPages !== false && ctx.msg.playerid in playerPages) {
+      if (playerPages && ctx.msg.playerid in playerPages) {
         delete playerPages[ctx.msg.playerid];
         setPlayerSpecificPages(playerPages);
         NibroUtils.Chat.whisperReply(ctx, "Rejoined active map");
@@ -20,7 +18,7 @@ namespace NibroMapUtils {
         NibroUtils.Chat.whisperReply(ctx, "You are already on the active map");
       }
     } else {
-      if (playerPages === false) {
+      if (!playerPages) {
         playerPages = {};
       }
       if (playerPages[ctx.msg.playerid] !== args.mapid) {
@@ -76,7 +74,7 @@ namespace NibroMapUtils {
     name: "ChangeMap",
     isTokenAction: false,
     action: () => {
-      const maps = (findObjs({ _type: "page" }) as Page[]).filter((map) =>
+      const maps = findObjs({ _type: "page" }).filter((map) =>
         map.get("name").startsWith(PUBLIC_MAP_PREFIX),
       );
       const mapMacro: string = `?{Map|Rejoin,rejoin|${maps

@@ -38,9 +38,9 @@ namespace NibroCardUtils {
           _displayname: args.playername,
         },
         { caseInsensitive: true },
-      )?.[0] as Player;
+      )?.[0];
       if (player) {
-        playerId = player.get("_id");
+        playerId = player.get("_id") as string;
       }
     }
 
@@ -94,12 +94,12 @@ namespace NibroCardUtils {
   }
 
   export function CreateDealCardMacros() {
-    findObjs(
+    findObjs<"deck">(
       {
         _type: "deck",
       },
       { caseInsensitive: true },
-    ).forEach((deck: Deck) => {
+    ).forEach((deck) => {
       const cards: Card[] = (
         findObjs({
           _type: "card",
@@ -123,7 +123,10 @@ namespace NibroCardUtils {
         });
         return;
       }
-      const macroName = `Deal_${deck.get("name").replace(" ", "-")}`;
+      const macroName = `Deal_${(deck.get("name") as string).replace(
+        " ",
+        "-",
+      )}`;
       NibroCore.registerMacro({
         name: macroName,
         action: () =>
@@ -160,20 +163,21 @@ namespace NibroCardUtils {
           _type: "player",
         })
           .map((player: Player): string => {
-            const playerId = player.get("_id");
+            const playerId = player.get("_id") as string;
             const playerName = player.get("_displayname");
             const discardCardButtons = findObjs({
               _type: "hand",
               _parentid: playerId,
             })
               .map((hand: Hand): string => {
-                const cards: Card[] = (hand.get("currentHand") as string)
+                const cards: Card[] = hand
+                  .get("currentHand")
                   .split(",")
-                  .filter((id) => id !== "")
-                  .map((id) => {
+                  .filter((id: string) => id !== "")
+                  .map((id: string): Card => {
                     return getObj("card", id);
                   })
-                  .sort((a, b) => {
+                  .sort((a: Card, b: Card) => {
                     return a
                       .get("name")
                       ?.toUpperCase()
@@ -193,7 +197,7 @@ namespace NibroCardUtils {
             NibroUtils.Chat.whisperReply(ctx, discardCardButtons);
             return `{{${playerName}=${discardCardButtons}}}`;
           })
-          .filter((str) => !str.endsWith("=}}"))
+          .filter((str: string) => !str.endsWith("=}}"))
           .join(" ")}`,
       );
   }
@@ -201,7 +205,7 @@ namespace NibroCardUtils {
   export function getPlayerListMacro(): string {
     const players: Player[] = findObjs({
       _type: "player",
-    });
+    }) as Player[];
     if (players.length === 1) {
       return players[0].id;
     }
@@ -242,7 +246,7 @@ namespace NibroCardUtils {
       NibroUtils.Chat.whisperReply(ctx, "Argument 'deck' required");
       return;
     }
-    const deck: Deck = findObjs(
+    const deck = findObjs(
       {
         _type: "deck",
         name: args.deck,
@@ -255,18 +259,18 @@ namespace NibroCardUtils {
     }
     const cards: Card[] = (deck.get("_currentDeck") as string)
       .split(",")
-      .filter((id) => id !== "")
-      .map((id) => {
+      .filter((id: string) => id !== "")
+      .map((id: string) => {
         return getObj("card", id);
       })
-      .sort((a, b) => {
+      .sort((a: Card, b: Card) => {
         return a
           .get("name")
           ?.toUpperCase()
           ?.localeCompare(b.get("name")?.toLocaleUpperCase());
       });
     shuffleDeck(
-      deck.get("_id"),
+      deck.get("_id") as string,
       true,
       cards.map((card) => card.get("_id")),
     );
@@ -285,7 +289,7 @@ namespace NibroCardUtils {
         name: deckName,
       },
       { caseInsensitive: true },
-    )?.[0];
+    )?.[0] as Deck;
     if (!deck) {
       log("Nibrocore - Deck not found: " + deckName);
       return;
@@ -369,7 +373,7 @@ namespace NibroCardUtils {
     name: "SortDeck",
     action: () => {
       const decks = findObjs({ _type: "deck" })
-        .map((deck: Deck) => deck.get("name"))
+        .map((deck) => (deck as Deck).get("name"))
         .sort()
         .join("|");
       return `!SortDeck --deck ?{Deck|${decks}}`;

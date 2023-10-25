@@ -114,7 +114,7 @@ namespace NibroCore {
           (existing) => existing.get("name") === macro.name,
         );
         if (existing) {
-          existing.set("action", macro.action?.());
+          existing.set("action", macro.action?.() || "");
           if (macro.isVisibleToAll) {
             existing.set("visibleto", "all");
           } else {
@@ -123,7 +123,7 @@ namespace NibroCore {
         } else {
           createObj("macro", {
             name: macro.name,
-            action: macro.action?.(),
+            action: macro.action?.() || "",
             visibleto: macro.isVisibleToAll ? "all" : GMList,
             istokenaction: macro.isTokenAction,
             playerid: ctx.msg.playerid,
@@ -210,6 +210,6 @@ namespace NibroCore {
       );
     }
   }
-  on("chat:message", (msg) => onChatMessage(msg));
+  on("chat:message", (msg) => onChatMessage(msg as Message));
 }
 export default NibroCore;

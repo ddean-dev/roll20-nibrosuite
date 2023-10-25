@@ -5,7 +5,7 @@ namespace NibroTokenUtils {
   export function setSelected(
     ctx: NibroCore.Context,
     values: {
-      [property in GraphicSettableProperty]?: {
+      [property in keyof GraphicProperties]?: {
         value?: boolean | number | string;
         attribute_name?: string;
         attribute_value_type?: "current" | "max";
@@ -14,7 +14,7 @@ namespace NibroTokenUtils {
           token: Graphic,
           character_id: string,
           current: boolean | number | string,
-        ) => void;
+        ) => boolean | number | string;
         attribute_mod?: (current: string) => boolean | number | string;
         link?: string;
       };
@@ -34,7 +34,7 @@ namespace NibroTokenUtils {
       names.push(getAttrByName(character_id, "character_name"));
       Object.entries(values).forEach(([property, val]) => {
         if (val.attribute_name) {
-          let value = getAttrByName(
+          let value: boolean | string | number = getAttrByName(
             character_id,
             val.attribute_name,
             val.attribute_value_type,
@@ -43,17 +43,17 @@ namespace NibroTokenUtils {
             value = val.attribute_mod(value);
           }
           if (value != undefined) {
-            token.set(property as GraphicSettableProperty, value);
+            token.set(property as keyof GraphicProperties, value);
           }
         } else if (val.value) {
-          token.set(property as GraphicSettableProperty, val.value);
+          token.set(property as keyof GraphicProperties, val.value);
         } else if (val.mod) {
-          let value = token.get(property as GraphicSettableProperty);
-          value = val.mod(ctx, token, character_id, value);
-          token.set(property as GraphicSettableProperty, value);
+          let value = token.get(property as keyof GraphicProperties) as string;
+          value = val.mod(ctx, token, character_id, value) as string;
+          token.set(property as keyof GraphicProperties, value);
         } else if (val.link) {
           token.set(
-            property as GraphicSettableProperty,
+            property as keyof GraphicProperties,
             NibroUtils.getAttributeId(character_id, val.link),
           );
         }

@@ -3,7 +3,8 @@
   "version": "1.0.2",
   "type": "module",
   "scripts": {
-    "start": "bun build NibroSuite.ts --outdir build && cat ./build/NibroSuite.js | clip.exe"
+    "start": "bun build NibroSuite.ts --outdir build && cat ./build/NibroSuite.js | clip.exe",
+    "lint": "bunx eslint ./src/"
   },
   "dependencies": {
     "typescript": "^5.0.0",

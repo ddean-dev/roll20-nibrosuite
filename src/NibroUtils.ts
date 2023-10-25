@@ -23,7 +23,7 @@ namespace NibroUtils {
     if (results.length < 1) {
       return "";
     } else {
-      return (results[0] as Attribute).get("_id");
+      return results[0].get("_id");
     }
   }
 

@@ -371,7 +371,9 @@ namespace NibroPF2E {
         if (graphic._type != "graphic") {
           return null;
         }
-        const charId = getObj(graphic._type, graphic._id).get("represents");
+        const charId: string = getObj(graphic._type, graphic._id).get(
+          "represents",
+        ) as string;
         if (!charId) {
           return null;
         }
@@ -380,14 +382,16 @@ namespace NibroPF2E {
       .filter((x) => !!x) as Character[];
   }
 
-  export function getConditionMarkers(obj: Graphic): string[] {
-    return (obj.get("statusmarkers") as string).split(",").filter((tm) => {
-      return !!tm && tm.startsWith(TOKEN_MARKER_CONDITION_PREFIX);
-    });
+  export function getConditionMarkers(g: Graphic): string[] {
+    return (g.get("statusmarkers") as string)
+      .split(",")
+      .filter((tm: string) => {
+        return !!tm && tm.startsWith(TOKEN_MARKER_CONDITION_PREFIX);
+      });
   }
 
   export function setConditionsTooltip(obj: Graphic): string[] {
-    const tooltip: string = obj.get("tooltip");
+    const tooltip = obj.get("tooltip") as string;
     if (tooltip && !tooltip.startsWith("[")) {
       return [];
     }
@@ -412,10 +416,10 @@ namespace NibroPF2E {
 
   export function dealConditionCards(obj: Graphic): void {
     const currentMarkers = getConditionMarkers(obj);
-    const character_id = obj.get("represents");
+    const character_id = obj.get("represents") as string;
     const controlledBy: string = character_id
-      ? (getObj("character", character_id) as Character).get("controlledby")
-      : obj.get("controlledby");
+      ? (getObj("character", character_id).get("controlledby") as string)
+      : (obj.get("controlledby") as string);
     let playerIds: string[] = controlledBy
       .split(",")
       .filter((x: string) => x !== "all" && x !== "");
@@ -471,9 +475,9 @@ namespace NibroPF2E {
     return toTitleCase(name.replace("-", " "));
   }
 
-  on("change:graphic:statusmarkers", (obj: Graphic) => {
-    setConditionsTooltip(obj);
-    dealConditionCards(obj);
+  on("change:graphic:statusmarkers", (obj) => {
+    setConditionsTooltip(obj as Graphic);
+    dealConditionCards(obj as Graphic);
   });
   Object.values(macro).forEach((m) => NibroCore.registerMacro(m));
 }
